@@ -3,77 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Write.io - History Only</title>
+    <title>Write.io - Clean Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { margin: 0; background-color: #0d0d0d; color: white; display: flex; justify-content: center; padding: 15px; }
-        .app-container { width: 100%; max-width: 450px; min-height: 95vh; background: #161616; padding: 25px; border-radius: 25px; border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
         
-        /* RGB Effect */
-        @keyframes rgbText {
-            0% { color: #ff0055; text-shadow: 0 0 8px #ff0055; }
-            33% { color: #00ffaa; text-shadow: 0 0 8px #00ffaa; }
-            66% { color: #0099ff; text-shadow: 0 0 8px #0099ff; }
-            100% { color: #ff0055; text-shadow: 0 0 8px #ff0055; }
+        /* RGB Animation */
+        @keyframes rgbText { 
+            0% { color: #ff0055; text-shadow: 0 0 8px #ff0055; } 
+            50% { color: #00ffaa; text-shadow: 0 0 8px #00ffaa; } 
+            100% { color: #ff0055; text-shadow: 0 0 8px #ff0055; } 
         }
         .rgb-effect { animation: rgbText 3s infinite linear; font-weight: bold; }
 
-        .logo { text-align: center; font-size: 32px; letter-spacing: 5px; margin-bottom: 5px; }
-        #status { text-align: center; font-size: 11px; margin-bottom: 25px; color: #555; font-weight: bold; }
-        
-        /* Static Input Card (အသေ) */
-        .static-card { background: #1c1c1c; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 30px; position: sticky; top: 0; z-index: 10; }
+        .app-container { width: 100%; max-width: 450px; min-height: 90vh; background: #161616; padding: 25px; border-radius: 25px; border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+
+        /* Custom Modal UI */
+        #customModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+        .modal-card {
+            background: #161616; padding: 25px; border-radius: 20px; border: 1px solid #333;
+            width: 80%; max-width: 300px; text-align: center;
+        }
+        .modal-btn-row { display: flex; gap: 10px; margin-top: 20px; }
+        .m-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background: #222; color: #888; }
+        .btn-confirm { background: #ff0055; color: white; }
+
+        /* Header */
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { font-size: 32px; letter-spacing: 5px; margin: 0; }
+        #status { font-size: 10px; color: #555; text-transform: uppercase; margin-top: 5px; }
+
+        /* Input Form */
+        .static-card { background: #1c1c1c; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 30px; }
         input, textarea { 
             width: 100%; padding: 14px; margin-bottom: 12px; 
             background: #0a0a0a; border: 1px solid #333; color: white; 
             border-radius: 12px; outline: none; font-size: 15px; 
         }
-        .btn { 
+        .btn-save { 
             width: 100%; padding: 15px; 
             background: linear-gradient(45deg, #ff0055, #0099ff); 
             border: none; color: white; font-weight: bold; 
             border-radius: 12px; cursor: pointer; transition: 0.2s; 
         }
-        .btn:active { transform: scale(0.96); }
+        .btn-save:active { transform: scale(0.96); }
 
-        /* History Section Header */
-        .history-header { 
-            font-size: 13px; color: #ff0055; text-transform: uppercase; 
-            margin: 10px 0 15px 5px; letter-spacing: 2px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .history-header::after { content: ""; flex: 1; height: 1px; background: #333; }
-
-        /* Dynamic History Items (Cloud ကဆွဲမည့်အပိုင်း) */
-        .note-item { 
-            background: #1c1c1c; padding: 18px; border-radius: 15px; 
-            margin-bottom: 15px; border: 1px solid #222; 
-            position: relative; animation: fadeIn 0.5s ease; 
-        }
+        /* History Items */
+        .history-label { color: #444; font-size: 12px; margin-bottom: 15px; letter-spacing: 1px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        .note-item { background: #1c1c1c; padding: 18px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #222; position: relative; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .btn-del { position: absolute; right: 15px; top: 15px; color: #444; background: none; border: none; cursor: pointer; font-size: 18px; transition: 0.3s; }
-        .btn-del:hover { color: #ff4d4d; }
-        
-        .note-title { margin: 0 0 5px 0; font-size: 18px; letter-spacing: 1px; }
-        .note-content { margin: 0 0 12px 0; font-size: 14px; line-height: 1.5; opacity: 0.8; font-weight: normal; }
-        .note-date { font-size: 10px; color: #555; display: block; text-align: right; border-top: 1px solid #222; padding-top: 8px; }
+        .btn-del-icon { position: absolute; right: 15px; top: 15px; color: #444; cursor: pointer; font-size: 18px; transition: 0.3s; }
+        .btn-del-icon:hover { color: #ff0055; }
+        .note-date { font-size: 10px; color: #444; margin-top: 10px; display: block; border-top: 1px solid #222; padding-top: 8px; text-align: right; }
     </style>
 </head>
 <body>
 
+<div id="customModal">
+    <div class="modal-card">
+        <h3 class="rgb-effect">Delete Note?</h3>
+        <p style="font-size: 14px; color: #aaa;">ဖျက်မှာ သေချာပါသလား?</p>
+        <div class="modal-btn-row">
+            <button class="m-btn btn-cancel" onclick="closeModal()">CANCEL</button>
+            <button class="m-btn btn-confirm" id="confirmDeleteBtn">DELETE</button>
+        </div>
+    </div>
+</div>
+
 <div class="app-container">
-    <h1 class="logo rgb-effect">WRITE.IO</h1>
-    <p id="status">☁️ Connecting...</p>
+    <div class="header">
+        <h1 class="logo rgb-effect">WRITE.IO</h1>
+        <p id="status">☁️ Cloud Synced ✅</p>
+    </div>
 
     <div class="static-card">
         <input type="text" id="tInput" placeholder="Title">
-        <textarea id="cInput" rows="3" placeholder="Note content..."></textarea>
-        <button class="btn" onclick="save()">SAVE TO HISTORY</button>
+        <textarea id="cInput" rows="3" placeholder="Write something here..."></textarea>
+        <button class="btn-save" onclick="save()">SAVE TO CLOUD</button>
     </div>
 
-    <div class="history-header">Cloud History</div>
+    <span class="history-label">CLOUD HISTORY</span>
     <div id="history-display"></div>
 </div>
 
@@ -87,62 +102,53 @@
     const D_ID = '6992bc79000e9ac78b3e'; 
     const C_ID = 'develop_';             
 
-    // History ကို Cloud ကနေ ဆွဲထုတ်ပြမည့် Function
+    let deleteId = null;
+
+    // Custom Modal Controls
+    function showModal(id) {
+        deleteId = id;
+        document.getElementById('customModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('customModal').style.display = 'none';
+    }
+
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        if(deleteId) {
+            try {
+                await db.deleteDocument(D_ID, C_ID, deleteId);
+                closeModal();
+                loadHistory();
+            } catch (e) { alert("Error deleting document!"); }
+        }
+    };
+
     async function loadHistory() {
         try {
             const res = await db.listDocuments(D_ID, C_ID, [Query.orderDesc("$createdAt")]);
-            document.getElementById('status').innerText = "Cloud Synced ✅";
-            document.getElementById('status').style.color = "#00ffaa";
-            
-            const html = res.documents.map(d => {
-                const timeString = new Date(d.$createdAt).toLocaleString('en-GB', { 
-                    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                });
-                
-                return `
+            const html = res.documents.map(d => `
                 <div class="note-item">
-                    <button class="btn-del" onclick="del('${d.$id}')">×</button>
-                    <h3 class="note-title rgb-effect">${d.title}</h3>
-                    <p class="note-content rgb-effect">${d.content}</p>
-                    <span class="note-date">🕒 ${timeString}</span>
-                </div>`;
-            }).join('');
-            
-            document.getElementById('history-display').innerHTML = html || "<p style='text-align:center;color:#444;font-size:12px;'>No history found on cloud.</p>";
-        } catch (e) {
-            document.getElementById('status').innerText = "❌ Sync Error";
-            console.error(e);
-        }
+                    <i class="fas fa-times btn-del-icon" onclick="showModal('${d.$id}')"></i>
+                    <h3 class="note-title rgb-effect" style="margin:0 0 5px 0; font-size:18px;">${d.title}</h3>
+                    <p class="note-content rgb-effect" style="margin:0; font-size:14px; opacity:0.8;">${d.content}</p>
+                    <span class="note-date">🕒 ${new Date(d.$createdAt).toLocaleString()}</span>
+                </div>`).join('');
+            document.getElementById('history-display').innerHTML = html || "<p style='color:#444;text-align:center;'>No history.</p>";
+        } catch (e) { console.log(e); }
     }
 
-    // Note အသစ်သိမ်းဆည်းခြင်း
     async function save() {
         const title = document.getElementById('tInput').value;
         const content = document.getElementById('cInput').value;
-        if(!title || !content) return alert("စာသားအပြည့်အစုံဖြည့်ပါ");
-
+        if(!title || !content) return;
         try {
-            document.getElementById('status').innerText = "⏳ Saving to History...";
             await db.createDocument(D_ID, C_ID, ID.unique(), { title, content });
             document.getElementById('tInput').value = "";
             document.getElementById('cInput').value = "";
-            loadHistory(); // သိမ်းပြီးတာနဲ့ History ကို ပြန်ဆွဲမည်
-        } catch (e) {
-            alert("Error: " + e.message);
-        }
+            loadHistory();
+        } catch (e) { console.log(e); }
     }
 
-    // History ဖျက်ခြင်း
-    async function del(id) {
-        if(confirm("ဒီ History ကို ဖျက်မှာ သေချာပါသလား?")) {
-            try {
-                await db.deleteDocument(D_ID, C_ID, id);
-                loadHistory();
-            } catch (e) { alert("Delete Error!"); }
-        }
-    }
-
-    // Page စဖွင့်တာနဲ့ History ဆွဲမည်
     loadHistory();
 </script>
 
