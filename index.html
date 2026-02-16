@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Write.io - Verified</title>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    <style>
+        * { box-sizing: border-box; font-family: sans-serif; }
+        body { margin: 0; background-color: #0d0d0d; color: white; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #161616; padding: 20px; border: 1px solid #222; }
+        @keyframes rgb { 0% { color: #ff0055; } 50% { color: #00ffaa; } 100% { color: #ff0055; } }
+        .rgb { animation: rgb 3s infinite linear; text-align: center; font-size: 28px; letter-spacing: 3px; }
+        #status { text-align: center; font-size: 11px; margin-bottom: 20px; color: #555; }
+        .card { background: #1c1c1c; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 25px; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 12px; background: #0d0d0d; border: 1px solid #333; color: white; border-radius: 8px; outline: none; }
+        .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #ff0055, #0099ff); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .note-item { background: #1c1c1c; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #ff0055; position: relative; }
+        .btn-del { position: absolute; right: 10px; top: 10px; color: #ff4d4d; background: none; border: none; cursor: pointer; font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h1 class="rgb">WRITE.IO</h1>
+    <p id="status">Connecting...</p>
+    <div class="card">
+        <input type="text" id="tInput" placeholder="Note Title...">
+        <textarea id="cInput" placeholder="What's on your mind?"></textarea>
+        <button class="btn" onclick="save()">SAVE TO CLOUD</button>
+    </div>
+    <div id="display"></div>
+</div>
+
+<script>
+    const { Client, Databases, ID, Query } = Appwrite;
+    const client = new Client()
+        .setEndpoint('https://sgp.cloud.appwrite.io/v1')
+        .setProject('6992bc5d0036e870162b');
+
+    const db = new Databases(client);
+    const D_ID = '6992bc790000e9ac78b3e';
+    const C_ID = 'develop_'; // ပုံထဲက Table ID အမှန်
+
+    async function load() {
+        try {
+            const res = await db.listDocuments(D_ID, C_ID, [Query.orderDesc("$createdAt")]);
+            document.getElementById('status').innerText = "Cloud Active ✅";
+            const html = res.documents.map(d => `
+                <div class="note-item">
+                    <button class="btn-del" onclick="del('${d.$id}')">×</button>
+                    <h3 class="rgb" style="font-size:18px; text-align:left; animation:none;">${d.title}</h3>
+                    <p style="color:#aaa; font-size:14px;">${d.content}</p>
+                </div>`).join('');
+            document.getElementById('display').innerHTML = html;
+        } catch (e) {
+            document.getElementById('status').innerText = "Error: Add Web Platform & Check Permissions!";
+        }
+    }
+
+    async function save() {
+        const title = document.getElementById('tInput').value;
+        const content = document.getElementById('cInput').value;
+        if(!title || !content) return alert("ဖြည့်ပါဦး!");
+        try {
+            await db.createDocument(D_ID, C_ID, ID.unique(), { title, content });
+            document.getElementById('tInput').value = "";
+            document.getElementById('cInput').value = "";
+            load();
+        } catch (e) { alert("သိမ်းလို့မရပါ။ Permissions နဲ့ Platform ကို စစ်ပေးပါ။"); }
+    }
+
+    async function del(id) {
+        if(confirm("ဖျက်မှာလား?")) {
+            await db.deleteDocument(D_ID, C_ID, id);
+            load();
+        }
+    }
+    load();
+</script>
+</body>
+</html>
