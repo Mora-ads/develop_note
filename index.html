@@ -3,32 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Write.io - Verified</title>
+    <title>Write.io - Cloud Active</title>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
-        * { box-sizing: border-box; font-family: sans-serif; }
-        body { margin: 0; background-color: #0d0d0d; color: white; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 400px; min-height: 100vh; background: #161616; padding: 20px; border: 1px solid #222; }
-        @keyframes rgb { 0% { color: #ff0055; } 50% { color: #00ffaa; } 100% { color: #ff0055; } }
-        .rgb { animation: rgb 3s infinite linear; text-align: center; font-size: 28px; letter-spacing: 3px; }
-        #status { text-align: center; font-size: 11px; margin-bottom: 20px; color: #555; }
-        .card { background: #1c1c1c; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 25px; }
-        input, textarea { width: 100%; padding: 12px; margin-bottom: 12px; background: #0d0d0d; border: 1px solid #333; color: white; border-radius: 8px; outline: none; }
-        .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #ff0055, #0099ff); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
-        .note-item { background: #1c1c1c; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #ff0055; position: relative; }
-        .btn-del { position: absolute; right: 10px; top: 10px; color: #ff4d4d; background: none; border: none; cursor: pointer; font-size: 20px; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; background-color: #0d0d0d; color: white; display: flex; justify-content: center; padding: 15px; }
+        .app-container { width: 100%; max-width: 400px; min-height: 90vh; background: #161616; padding: 25px; border-radius: 25px; border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        
+        @keyframes rgb { 0% { color: #ff0055; text-shadow: 0 0 10px #ff0055; } 50% { color: #00ffaa; text-shadow: 0 0 10px #00ffaa; } 100% { color: #ff0055; text-shadow: 0 0 10px #ff0055; } }
+        .rgb { animation: rgb 3s infinite linear; text-align: center; font-size: 32px; letter-spacing: 5px; margin-bottom: 5px; font-weight: bold; }
+        
+        #status { text-align: center; font-size: 11px; margin-bottom: 25px; color: #555; font-weight: bold; text-transform: uppercase; }
+        .card { background: #1c1c1c; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 30px; }
+        input, textarea { width: 100%; padding: 14px; margin-bottom: 12px; background: #0a0a0a; border: 1px solid #333; color: white; border-radius: 12px; outline: none; transition: 0.3s; font-size: 15px; }
+        input:focus, textarea:focus { border-color: #ff0055; }
+        
+        .btn { width: 100%; padding: 15px; background: linear-gradient(45deg, #ff0055, #0099ff); border: none; color: white; font-weight: bold; border-radius: 12px; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn:active { transform: scale(0.96); }
+        
+        .note-item { background: #1c1c1c; padding: 18px; border-radius: 15px; margin-bottom: 15px; border-left: 5px solid #ff0055; position: relative; animation: slideUp 0.4s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-del { position: absolute; right: 15px; top: 15px; color: #ff4d4d; background: none; border: none; cursor: pointer; font-size: 22px; }
+        .note-item h3 { margin: 0 0 8px 0; font-size: 19px; color: #fff; }
+        .note-item p { margin: 0; color: #aaa; font-size: 15px; line-height: 1.6; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <h1 class="rgb">WRITE.IO</h1>
-    <p id="status">Connecting...</p>
+    <p id="status">☁️ Connecting...</p>
+
     <div class="card">
-        <input type="text" id="tInput" placeholder="Note Title...">
-        <textarea id="cInput" placeholder="What's on your mind?"></textarea>
+        <input type="text" id="tInput" placeholder="Title">
+        <textarea id="cInput" rows="3" placeholder="Write something..."></textarea>
         <button class="btn" onclick="save()">SAVE TO CLOUD</button>
     </div>
+
     <div id="display"></div>
 </div>
 
@@ -39,44 +50,58 @@
         .setProject('6992bc5d0036e870162b');
 
     const db = new Databases(client);
-    const D_ID = '6992bc790000e9ac78b3e';
-    const C_ID = 'develop_'; // ပုံထဲက Table ID အမှန်
+
+    // IDs အားလုံးကို Screenshot 2:25 အတိုင်း အတိအကျ ပြင်ဆင်ထားသည်
+    const D_ID = '6992bc79000e9ac78b3e'; // Database ID
+    const C_ID = 'develop_';             // Collection (Table) ID
 
     async function load() {
         try {
             const res = await db.listDocuments(D_ID, C_ID, [Query.orderDesc("$createdAt")]);
             document.getElementById('status').innerText = "Cloud Active ✅";
+            document.getElementById('status').style.color = "#00ffaa";
+            
             const html = res.documents.map(d => `
                 <div class="note-item">
                     <button class="btn-del" onclick="del('${d.$id}')">×</button>
-                    <h3 class="rgb" style="font-size:18px; text-align:left; animation:none;">${d.title}</h3>
-                    <p style="color:#aaa; font-size:14px;">${d.content}</p>
+                    <h3>${d.title}</h3>
+                    <p>${d.content}</p>
                 </div>`).join('');
-            document.getElementById('display').innerHTML = html;
+            document.getElementById('display').innerHTML = html || "<p style='text-align:center;color:#444;'>No cloud notes.</p>";
         } catch (e) {
-            document.getElementById('status').innerText = "Error: Add Web Platform & Check Permissions!";
+            console.error(e);
+            document.getElementById('status').innerText = "❌ Error: " + e.message;
+            document.getElementById('status').style.color = "#ff4d4d";
         }
     }
 
     async function save() {
         const title = document.getElementById('tInput').value;
         const content = document.getElementById('cInput').value;
-        if(!title || !content) return alert("ဖြည့်ပါဦး!");
+        if(!title || !content) return alert("စာသား အပြည့်အစုံ ဖြည့်ပါ!");
+
         try {
+            document.getElementById('status').innerText = "⏳ Saving...";
             await db.createDocument(D_ID, C_ID, ID.unique(), { title, content });
             document.getElementById('tInput').value = "";
             document.getElementById('cInput').value = "";
             load();
-        } catch (e) { alert("သိမ်းလို့မရပါ။ Permissions နဲ့ Platform ကို စစ်ပေးပါ။"); }
+        } catch (e) {
+            alert("Save Error: " + e.message);
+        }
     }
 
     async function del(id) {
-        if(confirm("ဖျက်မှာလား?")) {
-            await db.deleteDocument(D_ID, C_ID, id);
-            load();
+        if(confirm("Cloud ပေါ်ကနေ ဖျက်မှာ သေချာပါသလား?")) {
+            try {
+                await db.deleteDocument(D_ID, C_ID, id);
+                load();
+            } catch (e) { alert("Delete Error!"); }
         }
     }
+
     load();
 </script>
+
 </body>
 </html>
